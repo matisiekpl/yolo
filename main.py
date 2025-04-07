@@ -52,23 +52,23 @@ html = """
                 <h2>Live Feed</h2>
                 <img id="videoFeed" src="">
             </div>
-            <div class="table-container">
-                <h2>Historical Data</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Time</th>
-                            <th>Count</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTable">
-                    </tbody>
-                </table>
+            <div class="chart-container">
+                <h2>People Count Over Time</h2>
+                <canvas id="peopleChart"></canvas>
             </div>
         </div>
-        <div class="chart-container">
-            <h2>People Count Over Time</h2>
-            <canvas id="peopleChart"></canvas>
+        <div class="table-container">
+            <h2>Historical Data</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTable">
+                </tbody>
+            </table>
         </div>
     </div>
     <script>
