@@ -19,6 +19,8 @@ A real-time people counting application that uses YOLOv8 for person detection an
 1. Run the application:
 ```bash
 uv run main.py
+# or
+uv run legacy.py # for running legacy WebSocket-based system
 ```
 
 2. Open your web browser and navigate to:
