@@ -5,8 +5,37 @@ from datetime import datetime
 import csv
 import os
 import threading
+from fastapi import FastAPI
+from typing import List, Dict
+import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 stop_threads = threading.Event()
+
+
+@app.get("/data")
+async def get_data() -> List[Dict[str, int]]:
+    data = []
+    try:
+        with open("log.csv", "r") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                data.append(
+                    {"timestamp": int(row["timestamp"]), "count": int(row["count"])}
+                )
+    except FileNotFoundError:
+        return []
+    return data
 
 
 def detection_thread():
@@ -48,9 +77,9 @@ def detection_thread():
                 # Save annotated frame
                 cv2.imwrite("log.png", annotated_frame)
 
-                # Log to CSV
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                csv_writer.writerow([timestamp, people_count])
+                # Log to CSV with Unix timestamp in milliseconds
+                unix_timestamp_ms = int(time.time() * 1000)
+                csv_writer.writerow([unix_timestamp_ms, people_count])
                 csvfile.flush()  # Ensure data is written to disk
 
                 # Calculate time to sleep to maintain 1 second interval
@@ -72,9 +101,8 @@ if __name__ == "__main__":
     detection_thread.start()
 
     try:
-        # Keep main thread alive
-        while not stop_threads.is_set():
-            time.sleep(1)
+        # Start FastAPI server
+        uvicorn.run(app, host="0.0.0.0", port=8000)
     except KeyboardInterrupt:
         print("\nStopping the application...")
     finally:

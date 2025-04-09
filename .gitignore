@@ -10,3 +10,6 @@ wheels/
 .venv
 
 *.pt
+
+log.png
+log.csv
