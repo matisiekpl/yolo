@@ -6,6 +6,7 @@ import csv
 import os
 import threading
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from typing import List, Dict
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,6 +37,13 @@ async def get_data() -> List[Dict[str, int]]:
     except FileNotFoundError:
         return []
     return data
+
+
+@app.get("/image")
+async def get_last_image():
+    if os.path.exists("log.png"):
+        return FileResponse("log.png", media_type="image/png")
+    return {"error": "No image available"}
 
 
 def detection_thread():
