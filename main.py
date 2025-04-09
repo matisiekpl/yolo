@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from typing import List, Dict
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
+import numpy as np
 
 app = FastAPI()
 
@@ -44,6 +45,30 @@ async def get_last_image():
     if os.path.exists("log.png"):
         return FileResponse("log.png", media_type="image/png")
     return {"error": "No image available"}
+
+
+@app.post("/purge")
+async def purge_data():
+    try:
+        # Keep log.csv headers but remove data
+        if os.path.exists("log.csv"):
+            with open("log.csv", "r") as csvfile:
+                headers = next(csv.reader(csvfile))
+            with open("log.csv", "w", newline="") as csvfile:
+                csv_writer = csv.writer(csvfile)
+                csv_writer.writerow(headers)
+        else:
+            with open("log.csv", "w", newline="") as csvfile:
+                csv_writer = csv.writer(csvfile)
+                csv_writer.writerow(["timestamp", "count"])
+
+        # Remove image file
+        if os.path.exists("log.png"):
+            os.remove("log.png")
+
+        return {"message": "Data purged and files recreated successfully"}
+    except Exception as e:
+        return {"error": f"Failed to purge and recreate data: {str(e)}"}
 
 
 def detection_thread():
