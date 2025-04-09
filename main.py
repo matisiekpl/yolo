@@ -10,7 +10,9 @@ from fastapi.responses import FileResponse
 from typing import List, Dict
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import numpy as np
+import psutil
 
 app = FastAPI()
 
@@ -22,7 +24,38 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files directory
+app.mount("/static", StaticFiles(directory="."), name="static")
+
 stop_threads = threading.Event()
+
+
+@app.get("/")
+async def root():
+    return FileResponse("index.html")
+
+
+@app.get("/healthz")
+async def get_health():
+    try:
+        cpu_percent = psutil.cpu_percent(interval=1)
+
+        memory = psutil.virtual_memory()
+        memory_used_percent = memory.percent
+        memory_used_gb = round(memory.used / (1024**3), 2)  # Convert to GB
+        memory_total_gb = round(memory.total / (1024**3), 2)  # Convert to GB
+
+        return {
+            "status": "healthy",
+            "cpu": {"usage_percent": cpu_percent},
+            "memory": {
+                "used_gb": memory_used_gb,
+                "total_gb": memory_total_gb,
+                "used_percent": memory_used_percent,
+            },
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 
 @app.get("/data")
