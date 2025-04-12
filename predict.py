@@ -1,11 +1,13 @@
+import os
 from ultralytics import YOLO
 import cv2
 import sys
 import argparse
 
+MODEL_NAME = os.getenv('MODEL_NAME', 'yolov8n.pt')
 
 def count_people(image_path, show=False):
-    model = YOLO("yolov8n.pt")
+    model = YOLO(MODEL_NAME)
 
     image = cv2.imread(image_path)
     if image is None:

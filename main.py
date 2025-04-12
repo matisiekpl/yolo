@@ -14,6 +14,8 @@ from fastapi.staticfiles import StaticFiles
 import numpy as np
 import psutil
 
+MODEL_NAME = os.getenv('MODEL_NAME', 'yolov8n.pt')
+
 app = FastAPI()
 
 app.add_middleware(
@@ -105,7 +107,7 @@ async def purge_data():
 
 
 def detection_thread():
-    model = YOLO("yolov8n.pt")
+    model = YOLO(MODEL_NAME)
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
