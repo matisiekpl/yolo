@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -10,6 +11,8 @@ import asyncio
 from typing import List, Dict
 import base64
 import numpy as np
+
+MODEL_NAME = os.getenv('MODEL_NAME', 'yolov8n.pt')
 
 app = FastAPI()
 
@@ -151,7 +154,7 @@ async def get():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
 
-    model = YOLO("yolov8n.pt")
+    model = YOLO(MODEL_NAME)
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
