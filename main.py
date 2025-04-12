@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import numpy as np
 import psutil
+import shutil
 
 MODEL_NAME = os.getenv('MODEL_NAME', 'yolov8n.pt')
 
@@ -78,7 +79,14 @@ async def get_data() -> List[Dict[str, int]]:
 @app.get("/image")
 async def get_last_image():
     if os.path.exists("log.png"):
-        return FileResponse("log.png", media_type="image/png")
+        # Create a copy of the file to serve
+        try:
+            shutil.copy2("log.png", "temp_log.png")
+            return FileResponse("temp_log.png", media_type="image/png", background=None)
+        finally:
+            # Clean up the temporary file after sending
+            if os.path.exists("temp_log.png"):
+                os.remove("temp_log.png")
     return {"error": "No image available"}
 
 
