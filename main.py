@@ -6,7 +6,7 @@ import csv
 import os
 import threading
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from typing import List, Dict
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 import numpy as np
 import psutil
 import shutil
+import io
 
 MODEL_NAME = os.getenv('MODEL_NAME', 'yolov8n.pt')
 
@@ -31,6 +32,10 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="."), name="static")
 
 stop_threads = threading.Event()
+
+# Global variable to store the last image
+last_image = None
+last_image_lock = threading.Lock()
 
 
 @app.get("/")
@@ -78,15 +83,13 @@ async def get_data() -> List[Dict[str, int]]:
 
 @app.get("/image")
 async def get_last_image():
-    if os.path.exists("log.png"):
-        # Create a copy of the file to serve
-        try:
-            shutil.copy2("log.png", "temp_log.png")
-            return FileResponse("temp_log.png", media_type="image/png", background=None)
-        finally:
-            # Clean up the temporary file after sending
-            if os.path.exists("temp_log.png"):
-                os.remove("temp_log.png")
+    global last_image
+    with last_image_lock:
+        if last_image is not None:
+            # Convert the image to bytes
+            _, buffer = cv2.imencode('.png', last_image)
+            image_bytes = buffer.tobytes()
+            return Response(content=image_bytes, media_type="image/png")
     return {"error": "No image available"}
 
 
@@ -150,7 +153,12 @@ def detection_thread():
                     2,
                 )
 
-                # Save annotated frame
+                # Update the global last_image variable
+                global last_image
+                with last_image_lock:
+                    last_image = annotated_frame.copy()
+
+                # Save annotated frame to file (keeping this for backward compatibility)
                 cv2.imwrite("log.png", annotated_frame)
 
                 # Log to CSV with Unix timestamp in milliseconds
